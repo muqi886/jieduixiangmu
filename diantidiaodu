@@ -1,0 +1,365 @@
+package Test1;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+public class Lifta{
+/**
+* @param args
+*/
+public static void main(String[] args){
+// TODO Auto-generated method stub
+Brick brick=new Brick();
+} 
+}
+
+class Brick{
+  public int octime=0; 
+  public int j=0;
+  public String closedoor="关门";
+  public String close="关";
+  public String open="开";
+  JFrame frame=new JFrame("电梯调度算法");
+  JPanel pan=new JPanel();
+  JButton but=null; 
+  JButton sign=new JButton(+j+"楼");
+  JButton openclose=new JButton(closedoor+"");
+  JButton openkey=new JButton(open+"");
+  JButton closekey=new JButton(close+"");
+
+  public ArrayList blackBrick;
+  public ArrayList controlBrick; 
+  public int[][] controlTable; 
+  public ArrayList numberBrick; 
+  public int[]table;
+  public int[] upSignalTable; 
+  public int[] downSignalTable; 
+  public Timer timer; 
+  public LiftThread lift; 
+  public Brick(){ 
+  sign.setBounds(0, 0, 80, 40); 
+  openclose.setBounds(80, 0, 80, 40); 
+  openclose.setBackground(Color.yellow);
+
+  openkey.setBounds(160, 0, 80, 40); 
+  openkey.addActionListener(new OpencolseListener());
+
+  closekey.setBounds(240, 0, 80, 40);
+  closekey.addActionListener(new OpencolseListener());
+  pan.setLayout(null); 
+  Font fnt=new Font("Serief",Font.ITALIC,15);
+  numberBrick=new ArrayList(10); 
+  blackBrick=new ArrayList(10);
+  controlBrick = new ArrayList(10);
+
+  controlTable = new int[10][2];
+  for (int i = 0; i < 10; i++)
+    for (int j = 0; j < 2; j++)
+      controlTable[i][j] = 0;
+
+  table = new int[10];
+  for (int i = 0; i < 10; i++)
+    table[i] = 0;
+
+  upSignalTable = new int[10];
+  downSignalTable = new int[10];
+  for (int i = 0; i < 10; i++) {
+    upSignalTable[i] = 0;
+    downSignalTable[i] = 0;
+  }
+  for(int i=10;i>0;i--){ 
+    but=new JButton(); 
+    but.setFont(fnt); 
+    but.setBounds(0, (11-i)*40, 80, 40);
+    but.setBackground(Color.BLACK); 
+    blackBrick.add(but); 
+    pan.add(but); 
+    but=new JButton(+i+"楼"); 
+    but.setFont(fnt); 
+    but.setBounds(80, (11-i)*40, 80, 40); 
+    but.addActionListener(new NumberListener(i));
+    but.setBackground(Color.gray); 
+    numberBrick.add(but); 
+    pan.add(but); 
+    but=new JButton("上"); 
+    but.setFont(fnt); 
+    but.setBounds(160, (11-i)*40, 80, 40); 
+    if(i!=10)
+      but.addActionListener(new UpListener(i));
+      but.setBackground(Color.gray); 
+      controlBrick.add(but); 
+      pan.add(but);
+      but=new JButton("下");
+      but.setFont(fnt);
+      but.setBounds(240, (11-i)*40, 80, 40);
+    if(i!=1)
+      but.addActionListener(new DownListener(i));
+      but.setBackground(Color.gray);
+      controlBrick.add(but);
+      pan.add(but);
+} 
+  pan.add(sign);
+  pan.add(openclose);
+  pan.add(openkey);
+  pan.add(closekey);
+  frame.add(pan); 
+  frame.setSize(329, 479);
+  lift = new LiftThread();
+  frame.setVisible(true);
+  frame.setDefaultCloseOperation(frame.EXIT_ON_CLOSE);
+} 
+public void DrawBrick() { 
+  for (int i = 1; i <=10; i++){
+	  for(int j=0;j<10;j++)
+	    ((JButton) blackBrick.get(j)).setBackground(Color.black);
+	    ((JButton) blackBrick.get(10-lift.number)).setBackground(Color.blue);
+  }
+}
+public void DrawControlBrick() {
+for (int i = 0; i < 10; i++)
+	for(int j=0;j<2;j++)
+		if (controlTable[i][j] == 1){
+			((JButton) controlBrick.get(i * 2 + j)).setBackground(Color.green);
+		}else{ 
+			((JButton) controlBrick.get(i * 2 + j )).setBackground(Color.gray);
+	}
+}
+public void DrawNumberBrick() { 
+	for (int i = 0; i < 10; i++)
+	if (table[i] == 1)
+		((JButton) numberBrick.get(i )).setBackground(Color.orange);
+	else
+		((JButton) numberBrick.get(i )).setBackground(Color.gray);
+}
+
+public boolean WorkState() { 
+for (int i = 0; i < 10; i++) {
+		if (table[i] == 1)
+			return true;
+	}
+	return false;
+}
+
+public void setState(int number){ 
+lift.destination = number; 
+	int x = lift.number;
+	if (lift.state == 0) {
+		if (number > x)
+			lift.state = 1;
+		if (number < x)
+			lift.state = 2;
+	} 
+}
+public class UpListener implements ActionListener{ 
+int L = 1; 
+UpListener(int n) {
+		L = n;
+	} 
+public void actionPerformed(ActionEvent e){ 
+controlTable[10 - L][0] = 1;
+	setState(L);
+	DrawControlBrick();
+	}
+}
+
+public class DownListener implements ActionListener{ 
+	int L=0;
+	public DownListener(int n){
+		L=n;
+	}
+	public void actionPerformed(ActionEvent e) {
+		controlTable[10-L][1]=1;
+		setState(L);
+		DrawControlBrick() ; 
+	}
+}
+
+public class NumberListener implements ActionListener { 
+int number = 0; 
+	NumberListener(int n) {
+		number = n;
+	}
+	public void actionPerformed(ActionEvent e) {
+		table[10 - number] = 1;
+		setState(number);
+		DrawNumberBrick();
+	}
+}
+
+public class OpencolseListener implements ActionListener { 
+OpencolseListener() {
+}
+	public void actionPerformed(ActionEvent e) {
+		octime=500;
+		System.out.println("事件"+octime);
+	}
+}
+public class TimeListener implements ActionListener { 
+TimeListener() {} 
+
+	public void actionDown(){ 
+if (lift.state == 2) {
+		int count = 0;
+		for (int i = lift.number; i > 0; i--)
+		if (table[10 - i] ==1||controlTable[10-i][1]==1||controlTable[10-i][0]==1)
+			count++;
+		if (count == 0&& lift.number <= lift.destination) {
+			count=0;
+			for(int j=lift.number;j<10;j++){
+				if(table[10-j]==1||controlTable[10-j][1]==1||controlTable[10-j][0]==1){
+			count++;
+	}
+}
+	if(count>0){
+		lift.state=1;
+	}else{
+		lift.state = 0;
+	}
+}
+}
+}
+
+
+public void actionUp(){ 
+if (lift.state == 1) {
+  int count = 0;
+  for (int i = lift.number; i < 10; i++)
+    if (table[10 - i] == 1||controlTable[10-i][0]==1||controlTable[10-i][1]==1)
+      count++; 
+  if (count == 0&& lift.number >=lift.destination) {
+    count=0;
+    for(int j=lift.number;j>0;j--){
+      if(table[10-j]==1||controlTable[10-j][1]==1||controlTable[10-j][0]==1){
+        count++;
+  }
+}
+if(count>0){
+  lift.state=2;
+  }else{
+		lift.state = 0;
+  }
+}
+}
+}
+
+public void actionPerformed(ActionEvent event) { 
+int state = lift.state; 
+
+if (lift.state!=0&&table[10 - lift.number] == 1) {table[10 - lift.number] = 0;
+	DrawNumberBrick();
+	new openclosThread();
+}
+if (state != 0&& lift.number == lift.destination) { 
+if (state == 2&& controlTable[10 - lift.number][state - 1]== 0) {
+		controlTable[10 - lift.number][2 - state] = 0;
+		DrawControlBrick();
+		new openclosThread();
+	}
+	if (state == 1&& controlTable[10 - lift.number][state - 1]== 0) {
+		controlTable[10 - lift.number][2 - state] = 0;
+		new openclosThread();
+		DrawControlBrick();
+	}
+}
+
+if (state == 1) { 
+if (controlTable[10 - lift.number][0] == 1) {
+		controlTable[10 - lift.number][0] = 0;
+		new openclosThread();
+		DrawControlBrick();
+	}
+}
+if (state == 2) { 
+if (controlTable[10 - lift.number][1] == 1) {
+		controlTable[10 - lift.number][1] = 0;
+		new openclosThread();
+		DrawControlBrick();
+	}
+}
+
+actionUp(); 
+
+actionDown();
+state = lift.state; 
+if (state == 1){
+	lift.number++;
+}
+if (state == 2){
+	lift.number--;
+}
+sign.setText("" + lift.number);
+DrawBrick();
+
+new Returnfirstfloor(state);
+}
+}
+public class openclosThread extends Thread { 
+public openclosThread() {
+  start();
+}
+public void run() { 
+  openclose.setText("开门");
+
+  try {
+    sleep(1000);
+  } catch (InterruptedException e) {
+}
+  openclose.setText("关门");
+}
+}
+
+public class Returnfirstfloor extends Thread { 
+int stater;
+	int count;
+	public Returnfirstfloor(int state) {
+		count=0;
+		this.stater=state;
+		start();
+	}
+	public void run() { 
+		if(stater==0&&lift.number!=1){ 
+			try { 
+				sleep(10000); 
+			}catch (InterruptedException e) { 
+}
+		for (int i = 1; i<=10; i++){
+			if (table[10 - i] == 1||controlTable[10-i][1]==1||controlTable[10-i][0]==1){
+				count++;
+		}
+}
+	if(count==0){
+		table[9] = 1;
+		lift.state=2;
+	}
+	}
+}
+}
+public class LiftThread extends Thread { 
+	public int number = 1;
+	public int state = 0; 
+int destination; 
+	int i=0;
+
+	public LiftThread() {
+		start();
+		i=octime;
+		System.out.println(""+i);
+	}
+
+	public void run() {
+		ActionListener timelistener = new TimeListener();
+		timer = new Timer((1500+i), timelistener);
+		timer.start();
+	}
+}
+}
